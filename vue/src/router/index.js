@@ -13,8 +13,30 @@ const routes = [
   {
     path: '/home',
     name: 'Home',
-    component: () => import('../components/Home.vue')
+    component: () => import('../components/Home.vue'),
+    redirect: "/welcome",
+    children: [
+      {
+        path: "/welcome",
+        component: () => import('../views/Default')
+      },
+
+      {
+        path: "/users",
+        component: () => import('../views/User')
+      },
+      // {
+      //   path: "/roles",
+      //   component: Role
+      // },
+      // {
+      //   path: "/rights",
+      //   component: Right
+      // }
+    ]
   },
+
+
   // {
   //   path: '/about',
   //   name: 'About',

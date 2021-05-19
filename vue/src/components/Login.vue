@@ -5,8 +5,8 @@
         <img src="../img/logo.png" alt="">
       </div>
       <el-form class="login_form" :model="loginForm" ref="FormRef" :rules="rules">
-        <el-form-item prop="username">
-          <el-input prefix-icon="el-icon-user-solid" v-model="loginForm.username"></el-input>
+        <el-form-item prop="name">
+          <el-input prefix-icon="el-icon-user-solid" v-model="loginForm.name"></el-input>
         </el-form-item>
         <el-form-item prop="password">
           <el-input prefix-icon="el-icon-warning" v-model="loginForm.password" type="password"></el-input>
@@ -27,11 +27,11 @@ export default {
   data() {
     return {
       loginForm: {
-        username: '',
+        name: '',
         password: '',
       },
       rules: {
-        username: [
+        name: [
           {required: true, message: '请输入用户名', trigger: 'blur'},
           {min: 3, max: 10, message: '长度在 3 到 10 个字符', trigger: 'blur'}
         ],
@@ -48,9 +48,11 @@ export default {
     },
     login() {
 
-      this.$http.post("/login", this.loginForm,).then(r => {
-        console.log(r.data)
 
+      this.$http.post("/login", this.loginForm,).then(r => {
+        let res = r.data
+        if (res.code !== 200) return this.$message.error(res.msg)
+        this.$message.success(res.msg)
         this.$router.push("/home")
       }).catch(r => {
         console.log(r.data)

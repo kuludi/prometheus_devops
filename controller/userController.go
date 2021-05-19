@@ -1,30 +1,37 @@
 package controller
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"log"
+	"net/http"
 	"prometheus_devops/db"
+	mes "prometheus_devops/message"
 	"prometheus_devops/model"
 	"prometheus_devops/services"
 	"strconv"
 )
 
 func Login(c *gin.Context) {
-	name := c.PostForm("username")
-	password := c.PostForm("password")
-
-	user, err := services.GetUserByName(name)
+	//name := c.PostForm("username")
+	//password := c.PostForm("password")
+	var u model.User
+	err2 := c.ShouldBind(&u)
+	log.Println("err2 >>>>>>>:", err2)
+	user, err := services.GetUserByName(u.Name)
 
 	if err != nil {
-		c.JSON(200, gin.H{"msg": fmt.Sprintf("Login failed %s", err)})
+		mes.Fail(c, http.StatusUnauthorized, "Login failed", err.Error())
+
 		return
 	}
-	if user.Password == password {
-		c.JSON(200, gin.H{"msg": "Login success"})
+	if user.Password == u.Password {
+		mes.Success(c, http.StatusOK, gin.H{"token": "adjkfajdfghjadgfygadjbfhjvbewfjk"})
+
 		return
 	}
-	c.JSON(401, gin.H{"msg": "Login faied"})
+
+	mes.Fail(c, http.StatusUnauthorized, "Login failed", err.Error())
 }
 
 func AddUser(c *gin.Context) {
@@ -33,10 +40,11 @@ func AddUser(c *gin.Context) {
 	c.ShouldBind(&user)
 	row := db.DB.Create(&user).RowsAffected
 	if row == 1 {
-		c.JSON(200, gin.H{"msg": "success"})
+		mes.Success(c, http.StatusOK, nil)
 		return
 	}
-	c.JSON(200, gin.H{"msg": "failed create user"})
+	mes.Fail(c, http.StatusUnprocessableEntity, "failed create user", nil)
+
 }
 
 func GetUser(c *gin.Context) {
@@ -44,25 +52,27 @@ func GetUser(c *gin.Context) {
 	if id != "" {
 		user, row := services.GetUser(id)
 		if row == 1 {
-			c.JSON(200, gin.H{"data": gin.H{"user": user}})
-
+			mes.Success(c, http.StatusOK, user)
 			return
 		}
-		c.JSON(200, gin.H{"msg": "failed find user"})
+		mes.Fail(c, http.StatusUnprocessableEntity, "failed find user", nil)
+
 		return
 	}
 	user := services.GetAllUser()
+	mes.Success(c, http.StatusOK, user)
 
-	c.JSON(200, gin.H{"data": gin.H{"user": user}})
 }
 
 func DeleteUser(c *gin.Context) {
 	id := c.Query("id")
 	if services.DelteUser(id) {
-		c.JSON(200, gin.H{"msg": "success"})
+		mes.Success(c, 200, id)
+
 		return
 	}
-	c.JSON(200, gin.H{"msg": "failed delete user"})
+	mes.Fail(c, http.StatusUnprocessableEntity, "failed delete user", nil)
+
 }
 
 func UpdateUser(c *gin.Context) {
@@ -78,8 +88,10 @@ func UpdateUser(c *gin.Context) {
 		Phone:    phone,
 	}
 	if services.UpdateUser(user) {
-		c.JSON(200, gin.H{"msg": "success"})
+		mes.Success(c, http.StatusOK, user)
+
 		return
 	}
-	c.JSON(200, gin.H{"msg": " update failed "})
+	mes.Fail(c, http.StatusUnprocessableEntity, "update failed", nil)
+
 }
