@@ -1,7 +1,13 @@
 package main
 
-import "fmt"
+import (
+	"log"
+	"prometheus_devops/cmd"
+)
 
 func main() {
-	fmt.Println("hello world")
+	err := cmd.Execute()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
